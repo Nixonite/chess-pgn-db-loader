@@ -34,14 +34,17 @@ def generate_psql_conn():
   return engine.connect()
 
 def extract_games_from_pgn(pgn_file):
-  pgn = open(pgn_file)
+  try:
+    pgn = open(pgn_file)
 
-  games_list = []
-  g = chess.pgn.read_game(pgn)
-  while g:
-    games_list.append(g)
+    games_list = []
     g = chess.pgn.read_game(pgn)
-  return games_list
+    while g:
+      games_list.append(g)
+      g = chess.pgn.read_game(pgn)
+    return games_list
+  except:
+    return []
 
 def chessgames_to_df(games_list):
   df = pd.DataFrame(map(lambda g: g.headers, games_list))
