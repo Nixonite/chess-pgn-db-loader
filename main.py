@@ -46,13 +46,26 @@ def extract_games_from_pgn(pgn_file):
   except:
     return []
 
+def cleanup_event_date(event_date):
+  try:
+    cleaned_month_days = event_date \
+      .replace(".??", ".01") \
+      .replace("-??", "-01") \
+      .replace("/??", "/01")
+    return cleaned_month_days
+  except:
+    return None
+
 def chessgames_to_df(games_list):
   df = pd.DataFrame(map(lambda g: g.headers, games_list))
   df.columns = list(map(lambda c: c.strip().lower(), df.columns))
-  df['eventdate'] = pd.to_datetime(df['eventdate'])
-  df['gameresult'] = df['result']
-  del df['result']
+  df = df.rename({'date': 'eventdate', 'result': 'gameresult'}, axis='columns')
+  df['eventdate'] = df['eventdate'].map(cleanup_event_date)
+  df['eventdate'] = pd.to_datetime(df['eventdate'], errors='coerce')
   df['pgn'] = list(map(lambda g: str(g.mainline()), games_list))
+  df['whiteelo'] = pd.to_numeric(df['whiteelo'], errors='coerce')
+  df['blackelo'] = pd.to_numeric(df['blackelo'], errors='coerce')
+  df['round'] = pd.to_numeric(df['round'], errors='coerce')
   col_order = [
     'event',
     'site',
